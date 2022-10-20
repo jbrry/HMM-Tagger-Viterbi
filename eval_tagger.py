@@ -9,7 +9,7 @@ import sys
 def corpus_iterator(corpus_file):
     """
     Get an iterator object over the corpus file. The elements of the
-    iterator contain (word, ne_tag) tuples. Blank lines, indicating
+    iterator contain (word, tag) tuples. Blank lines, indicating
     sentence boundaries return (None, None).
     """
     l = corpus_file.readline()
@@ -21,7 +21,7 @@ def corpus_iterator(corpus_file):
             if line:  # Nonempty line
                 # Extract information from line.
                 # Each line has the format
-                # word ne_tag [log_prob]
+                # word tag
                 fields = line.split("\t")
                 ne_tag = fields[tagfield]
                 word = " ".join(fields[:tagfield])
@@ -32,16 +32,12 @@ def corpus_iterator(corpus_file):
     except IndexError:
         sys.stderr.write("Could not read line: \n")
         sys.stderr.write(f"\n{line}")
-        if with_logprob:
-            sys.stderr.write(
-                "Did you forget to output log probabilities in the prediction file?\n"
-            )
         sys.exit(1)
 
 
 class Evaluator(object):
     """
-    Stores global true/false positive/negative counts. 
+    Stores correct/incorrect counts. 
     """
 
     def __init__(self):
@@ -50,11 +46,7 @@ class Evaluator(object):
         self.total = 0
 
     def compare(self, gold_standard, prediction):
-        """
-        Compare the prediction against a gold standard. Both objects must be
-        generator or iterator objects that return a (word, ne_tag) tuple at a
-        time.
-        """
+        """Compare the prediction against a gold standard."""
         for gold_input, pred_input in zip(gold_standard, prediction):
             gs_word, gs_tag = gold_input[0], gold_input[1]
             pred_word, pred_tag = pred_input[0], pred_input[1]
@@ -84,9 +76,9 @@ class Evaluator(object):
 def usage():
     sys.stderr.write(
         """
-    Usage: python eval_tagger.py [key_file] [prediction_file]
-        Evaluate the tagger output in prediction_file against
-        the gold standard in key_file. Outputs accuracy.\n"""
+    Usage: python eval_tagger.py <gold_file> <prediction_file>
+        Evaluate the tagger output in <prediction_file> against
+        the gold standard in <gold_file>. Outputs accuracy.\n"""
     )
 
 
